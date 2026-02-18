@@ -1,1 +1,10 @@
 project_id = "nufxiljqwvwqsszbkemu"
+
+[functions.siwe-auth]
+verify_jwt = false
+
+[functions.prices]
+verify_jwt = false
+
+[functions.admin]
+verify_jwt = false

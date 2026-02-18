@@ -2,14 +2,23 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import GlassCard from "@/components/GlassCard";
 import CoinIcon from "@/components/CoinIcon";
-import { MOCK_PRICES, MOCK_DEPOSIT_ADDRESS } from "@/lib/mockData";
-import { Copy, Check, QrCode, ArrowDown, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePrices } from "@/hooks/usePrices";
+import { Copy, Check, ArrowDown, Loader2, AlertCircle } from "lucide-react";
 import QRCode from "react-qr-code";
 import { toast } from "sonner";
-
-const swappableCoins = MOCK_PRICES.filter((c) => c.coin !== "USDT");
+import { useQueryClient } from "@tanstack/react-query";
 
 const SwapPage = () => {
+  const { session, user, refreshUser } = useAuth();
+  const { data: prices } = usePrices();
+  const queryClient = useQueryClient();
+
+  const swappableCoins = useMemo(
+    () => (prices || []).filter((c) => c.coin !== "USDT"),
+    [prices]
+  );
+
   const [selectedCoin, setSelectedCoin] = useState("BTC");
   const [usdtAmount, setUsdtAmount] = useState("");
   const [txHash, setTxHash] = useState("");
@@ -17,22 +26,30 @@ const SwapPage = () => {
   const [copied, setCopied] = useState(false);
 
   const price = useMemo(
-    () => swappableCoins.find((c) => c.coin === selectedCoin)!,
-    [selectedCoin]
+    () => swappableCoins.find((c) => c.coin === selectedCoin),
+    [selectedCoin, swappableCoins]
   );
 
-  const coinAmount = usdtAmount
-    ? (parseFloat(usdtAmount) / price.fettiPrice).toFixed(8)
-    : "0.00000000";
+  const coinAmount =
+    usdtAmount && price
+      ? (parseFloat(usdtAmount) / price.fettiPrice).toFixed(8)
+      : "0.00000000";
+
+  const depositAddress = user?.assigned_bep20_address || "";
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(MOCK_DEPOSIT_ADDRESS);
+    if (!depositAddress) return;
+    navigator.clipboard.writeText(depositAddress);
     setCopied(true);
     toast.success("Address copied!");
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleVerify = async () => {
+    if (!session) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
     if (!txHash.trim()) {
       toast.error("Please enter a transaction hash");
       return;
@@ -41,16 +58,60 @@ const SwapPage = () => {
       toast.error("Please enter a valid USDT amount");
       return;
     }
+    if (!price) return;
+
     setVerifying(true);
-    // Simulate verification
-    await new Promise((r) => setTimeout(r, 2500));
-    setVerifying(false);
-    toast.success("Transaction verified! Swap complete.", {
-      description: `${coinAmount} ${selectedCoin} credited to your balance.`,
-    });
-    setTxHash("");
-    setUsdtAmount("");
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/verify-tx`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            tx_hash: txHash.trim(),
+            coin: selectedCoin,
+            usdt_amount: parseFloat(usdtAmount),
+            coin_amount: parseFloat(coinAmount),
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.status === "confirmed") {
+        toast.success("Transaction verified! Swap complete.", {
+          description: `${data.coin_amount} ${selectedCoin} credited to your balance.`,
+        });
+        setTxHash("");
+        setUsdtAmount("");
+        await refreshUser();
+        queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      } else {
+        toast.error(data.error || "Verification failed");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Verification error");
+    } finally {
+      setVerifying(false);
+    }
   };
+
+  if (!session) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 pb-24">
+        <h1 className="text-2xl font-bold">Swap</h1>
+        <GlassCard className="text-center py-12">
+          <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">Connect your wallet to start swapping.</p>
+        </GlassCard>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -110,9 +171,11 @@ const SwapPage = () => {
           <span className="text-muted-foreground font-medium">{selectedCoin}</span>
         </div>
 
-        <p className="text-xs text-muted-foreground mt-2">
-          Rate: 1 {selectedCoin} = ${price.fettiPrice.toLocaleString()} USDT (Fetti Price)
-        </p>
+        {price && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Rate: 1 {selectedCoin} = ${price.fettiPrice.toLocaleString()} USDT (Fetti Price)
+          </p>
+        )}
       </GlassCard>
 
       {/* Deposit Address */}
@@ -120,26 +183,37 @@ const SwapPage = () => {
         <p className="text-sm text-muted-foreground mb-3">
           Send USDT (BEP20) to this address
         </p>
-        <div className="flex justify-center mb-4">
-          <div className="p-3 bg-foreground rounded-xl">
-            <QRCode value={MOCK_DEPOSIT_ADDRESS} size={160} />
+        {depositAddress ? (
+          <>
+            <div className="flex justify-center mb-4">
+              <div className="p-3 bg-foreground rounded-xl">
+                <QRCode value={depositAddress} size={160} />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="input-glass flex-1 text-xs font-mono truncate">
+                {depositAddress}
+              </div>
+              <button
+                onClick={handleCopy}
+                className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center hover:bg-primary/25 transition-colors"
+              >
+                {copied ? (
+                  <Check className="w-4 h-4 text-primary" />
+                ) : (
+                  <Copy className="w-4 h-4 text-primary" />
+                )}
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-6">
+            <AlertCircle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">
+              No deposit address assigned yet. Contact support.
+            </p>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="input-glass flex-1 text-xs font-mono truncate">
-            {MOCK_DEPOSIT_ADDRESS}
-          </div>
-          <button
-            onClick={handleCopy}
-            className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center hover:bg-primary/25 transition-colors"
-          >
-            {copied ? (
-              <Check className="w-4 h-4 text-primary" />
-            ) : (
-              <Copy className="w-4 h-4 text-primary" />
-            )}
-          </button>
-        </div>
+        )}
       </GlassCard>
 
       {/* Tx Hash */}

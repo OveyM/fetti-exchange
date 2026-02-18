@@ -2,15 +2,31 @@ import { motion } from "framer-motion";
 import GlassCard from "@/components/GlassCard";
 import CoinIcon from "@/components/CoinIcon";
 import StatusBadge from "@/components/StatusBadge";
-import { MOCK_TRANSACTIONS } from "@/lib/mockData";
-import { Copy } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTransactions } from "@/hooks/useTransactions";
+import { Copy, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const HistoryPage = () => {
+  const { session } = useAuth();
+  const { data: transactions, isLoading } = useTransactions();
+
   const copyHash = (hash: string) => {
     navigator.clipboard.writeText(hash);
     toast.success("Tx hash copied!");
   };
+
+  if (!session) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 pb-24">
+        <h1 className="text-2xl font-bold">History</h1>
+        <GlassCard className="text-center py-12">
+          <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">Connect your wallet to view history.</p>
+        </GlassCard>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -20,13 +36,17 @@ const HistoryPage = () => {
     >
       <h1 className="text-2xl font-bold">History</h1>
 
-      {MOCK_TRANSACTIONS.length === 0 ? (
+      {isLoading ? (
+        <GlassCard className="text-center py-12">
+          <p className="text-muted-foreground">Loading...</p>
+        </GlassCard>
+      ) : !transactions || transactions.length === 0 ? (
         <GlassCard className="text-center py-12">
           <p className="text-muted-foreground">No transactions yet.</p>
         </GlassCard>
       ) : (
         <div className="space-y-3">
-          {MOCK_TRANSACTIONS.map((tx, i) => (
+          {transactions.map((tx, i) => (
             <GlassCard key={tx.id} delay={i * 0.08}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -36,7 +56,7 @@ const HistoryPage = () => {
                       {tx.type} · {tx.coin}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(tx.createdAt).toLocaleDateString(undefined, {
+                      {new Date(tx.created_at).toLocaleDateString(undefined, {
                         month: "short",
                         day: "numeric",
                         hour: "2-digit",
@@ -45,25 +65,25 @@ const HistoryPage = () => {
                     </p>
                   </div>
                 </div>
-                <StatusBadge status={tx.status} />
+                <StatusBadge status={tx.status as "confirmed" | "pending" | "failed"} />
               </div>
 
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="text-muted-foreground">Amount</span>
                 <span className="font-medium">
-                  {tx.coinAmount} {tx.coin}{" "}
+                  {tx.coin_amount} {tx.coin}{" "}
                   <span className="text-muted-foreground">
-                    (${tx.usdtAmount})
+                    (${tx.usdt_amount})
                   </span>
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
                 <div className="flex-1 text-xs font-mono text-muted-foreground truncate">
-                  {tx.txHash}
+                  {tx.tx_hash}
                 </div>
                 <button
-                  onClick={() => copyHash(tx.txHash)}
+                  onClick={() => copyHash(tx.tx_hash)}
                   className="p-1.5 rounded-lg hover:bg-muted transition-colors"
                 >
                   <Copy className="w-3.5 h-3.5 text-muted-foreground" />
