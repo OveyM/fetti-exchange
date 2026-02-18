@@ -14,13 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      deposit_addresses: {
+        Row: {
+          address: string
+          assigned: boolean
+          assigned_to_wallet: string | null
+        }
+        Insert: {
+          address: string
+          assigned?: boolean
+          assigned_to_wallet?: string | null
+        }
+        Update: {
+          address?: string
+          assigned?: boolean
+          assigned_to_wallet?: string | null
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          coin: string
+          coin_amount: number
+          created_at: string
+          id: string
+          status: string
+          tx_hash: string
+          type: string
+          usdt_amount: number
+          wallet_address: string
+        }
+        Insert: {
+          coin: string
+          coin_amount: number
+          created_at?: string
+          id?: string
+          status?: string
+          tx_hash: string
+          type: string
+          usdt_amount: number
+          wallet_address: string
+        }
+        Update: {
+          coin?: string
+          coin_amount?: number
+          created_at?: string
+          id?: string
+          status?: string
+          tx_hash?: string
+          type?: string
+          usdt_amount?: number
+          wallet_address?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          assigned_bep20_address: string | null
+          balances: Json
+          created_at: string
+          id: string
+          wallet_address: string
+        }
+        Insert: {
+          assigned_bep20_address?: string | null
+          balances?: Json
+          created_at?: string
+          id: string
+          wallet_address: string
+        }
+        Update: {
+          assigned_bep20_address?: string | null
+          balances?: Json
+          created_at?: string
+          id?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_wallet: { Args: { user_id: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
