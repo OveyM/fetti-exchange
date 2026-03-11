@@ -22,7 +22,7 @@ const HistoryPage = () => {
         <h1 className="text-2xl font-bold">History</h1>
         <GlassCard className="text-center py-12">
           <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Connect your wallet to view history.</p>
+          <p className="text-muted-foreground">Login to view history.</p>
         </GlassCard>
       </motion.div>
     );

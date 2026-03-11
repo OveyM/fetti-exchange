@@ -4,7 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 
 interface UserData {
   id: string;
-  wallet_address: string;
+  username: string;
   assigned_bep20_address: string | null;
   balances: Record<string, number>;
 }
@@ -13,7 +13,8 @@ interface AuthContextType {
   session: Session | null;
   user: UserData | null;
   loading: boolean;
-  connectWallet: () => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  signup: (username: string, password: string) => Promise<void>;
   disconnect: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -40,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (data) {
       setUser({
         id: data.id,
-        wallet_address: data.wallet_address,
+        username: data.wallet_address, // wallet_address column stores username
         assigned_bep20_address: data.assigned_bep20_address,
         balances: data.balances as Record<string, number>,
       });
@@ -72,39 +73,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const connectWallet = async () => {
-    const ethereum = (window as any).ethereum;
-    if (!ethereum) {
-      throw new Error("No wallet found. Please install MetaMask.");
-    }
-
-    const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-    const address = accounts[0];
-
-    // Create SIWE message
-    const message = `Sign in to FettiSwap\n\nWallet: ${address}\nTimestamp: ${new Date().toISOString()}`;
-
-    // Request signature
-    const signature = await ethereum.request({
-      method: "personal_sign",
-      params: [message, address],
-    });
-
-    // Verify with backend
+  const signup = async (username: string, password: string) => {
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
     const res = await fetch(
-      `https://${projectId}.supabase.co/functions/v1/siwe-auth`,
+      `https://${projectId}.supabase.co/functions/v1/username-auth`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({
-          wallet_address: address,
-          message,
-          signature,
-        }),
+        body: JSON.stringify({ action: "signup", username, password }),
+      }
+    );
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    if (data.session) {
+      await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+    }
+  };
+
+  const login = async (username: string, password: string) => {
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const res = await fetch(
+      `https://${projectId}.supabase.co/functions/v1/username-auth`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ action: "login", username, password }),
       }
     );
 
@@ -126,7 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, connectWallet, disconnect, refreshUser }}>
+    <AuthContext.Provider value={{ session, user, loading, login, signup, disconnect, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

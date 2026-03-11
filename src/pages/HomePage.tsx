@@ -3,7 +3,7 @@ import GlassCard from "@/components/GlassCard";
 import CoinIcon from "@/components/CoinIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrices } from "@/hooks/usePrices";
-import { TrendingUp, TrendingDown, Wallet, Zap } from "lucide-react";
+import { TrendingUp, TrendingDown, User, Zap } from "lucide-react";
 import { MOCK_BALANCES } from "@/lib/mockData";
 
 const container = {
@@ -24,13 +24,11 @@ const HomePage = () => {
     (balances.USDT || 0) +
     (balances.BTC || 0) * (getPrice("BTC")?.marketPrice || 0) +
     (balances.ETH || 0) * (getPrice("ETH")?.marketPrice || 0) +
-    (balances.LTC || 0) * (getPrice("LTC")?.marketPrice || 0);
+    (balances.SOL || 0) * (getPrice("SOL")?.marketPrice || 0);
 
-  const walletDisplay = user
-    ? `${user.wallet_address.slice(0, 6)}...${user.wallet_address.slice(-4)}`
-    : "Not Connected";
+  const usernameDisplay = user ? user.username : "Not Connected";
 
-  const ltcPrice = getPrice("LTC");
+  const solPrice = getPrice("SOL");
 
   return (
     <motion.div
@@ -43,10 +41,10 @@ const HomePage = () => {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-muted-foreground">Welcome back</p>
-          <h1 className="text-2xl font-bold text-foreground">{walletDisplay}</h1>
+          <h1 className="text-2xl font-bold text-foreground">{usernameDisplay}</h1>
         </div>
         <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center">
-          <Wallet className="w-5 h-5 text-primary" />
+          <User className="w-5 h-5 text-primary" />
         </div>
       </div>
 
@@ -71,18 +69,18 @@ const HomePage = () => {
         ))}
       </div>
 
-      {/* LTC Special Card */}
-      {ltcPrice && (
+      {/* SOL Special Card */}
+      {solPrice && (
         <GlassCard delay={0.3} className="relative overflow-hidden border-secondary/30">
           <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="flex items-center gap-3 mb-3">
             <Zap className="w-5 h-5 text-secondary" />
-            <h3 className="font-semibold text-secondary">LTC Special Pricing</h3>
+            <h3 className="font-semibold text-secondary">SOL Special Pricing</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-2">
-            Get LTC at{" "}
+            Get SOL at{" "}
             <span className="text-secondary font-semibold">
-              ${(ltcPrice.marketPrice - ltcPrice.fettiPrice).toFixed(0)} below
+              ${(solPrice.marketPrice - solPrice.fettiPrice).toFixed(0)} below
             </span>{" "}
             market price exclusively on FettiSwap.
           </p>
@@ -90,13 +88,13 @@ const HomePage = () => {
             <div>
               <p className="text-xs text-muted-foreground">Market</p>
               <p className="text-sm line-through text-muted-foreground">
-                ${ltcPrice.marketPrice}
+                ${solPrice.marketPrice}
               </p>
             </div>
             <div>
               <p className="text-xs text-secondary">Fetti Price</p>
               <p className="text-lg font-bold text-secondary">
-                ${ltcPrice.fettiPrice}
+                ${solPrice.fettiPrice}
               </p>
             </div>
           </div>
