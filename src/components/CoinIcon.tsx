@@ -1,7 +1,7 @@
 const icons: Record<string, { color: string; label: string }> = {
   BTC: { color: "hsl(36, 100%, 50%)", label: "₿" },
   ETH: { color: "hsl(230, 60%, 60%)", label: "Ξ" },
-  LTC: { color: "hsl(210, 10%, 60%)", label: "Ł" },
+  SOL: { color: "hsl(260, 80%, 60%)", label: "◎" },
   USDT: { color: "hsl(155, 80%, 45%)", label: "₮" },
 };
 

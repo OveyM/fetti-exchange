@@ -186,7 +186,7 @@ const AdminPage = () => {
                   onChange={(e) => setEditCoin(e.target.value)}
                   className="input-glass text-sm"
                 >
-                  {["USDT", "BTC", "ETH", "LTC"].map((c) => (
+                  {["USDT", "BTC", "ETH", "SOL"].map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
@@ -208,7 +208,7 @@ const AdminPage = () => {
               {data.map((u: any) => (
                 <div key={u.id} className="glass-card p-4 text-sm space-y-1">
                   <p className="font-mono text-xs text-muted-foreground">{u.id}</p>
-                  <p><span className="text-muted-foreground">Wallet:</span> {u.wallet_address}</p>
+                  <p><span className="text-muted-foreground">Username:</span> {u.wallet_address}</p>
                   <p><span className="text-muted-foreground">Deposit Addr:</span> {u.assigned_bep20_address || "None"}</p>
                   <p><span className="text-muted-foreground">Balances:</span> {JSON.stringify(u.balances)}</p>
                 </div>
@@ -264,9 +264,9 @@ const AdminPage = () => {
         {!loading && activeTab === "addresses" && (
           <div className="space-y-4">
             <div className="glass-card p-4 space-y-3">
-              <h3 className="font-semibold text-sm">Add Deposit Addresses (one per line)</h3>
+              <h3 className="font-semibold text-sm">Add Solana Deposit Addresses (one per line)</h3>
               <textarea
-                placeholder="0x123...&#10;0x456...&#10;0x789..."
+                placeholder="ABC123...&#10;DEF456...&#10;GHI789..."
                 value={newAddresses}
                 onChange={(e) => setNewAddresses(e.target.value)}
                 className="input-glass w-full h-32 font-mono text-sm resize-none"
@@ -283,7 +283,7 @@ const AdminPage = () => {
                   <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
                     addr.assigned ? "status-confirmed" : "status-pending"
                   }`}>
-                    {addr.assigned ? "Assigned" : "Available"}
+                    {addr.assigned ? `Assigned (${addr.assigned_to_wallet})` : "Available"}
                   </span>
                 </div>
               ))}

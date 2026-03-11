@@ -8,7 +8,7 @@ export interface CoinPrice {
 export const MOCK_PRICES: CoinPrice[] = [
   { coin: "BTC", marketPrice: 67432.18, fettiPrice: 67432.18, change24h: 2.4 },
   { coin: "ETH", marketPrice: 3521.85, fettiPrice: 3521.85, change24h: -0.8 },
-  { coin: "LTC", marketPrice: 84.52, fettiPrice: 67.52, change24h: 1.2 },
+  { coin: "SOL", marketPrice: 145.0, fettiPrice: 129.0, change24h: 1.2 },
   { coin: "USDT", marketPrice: 1.0, fettiPrice: 1.0, change24h: 0.01 },
 ];
 
@@ -16,7 +16,7 @@ export const MOCK_BALANCES: Record<string, number> = {
   USDT: 250.0,
   BTC: 0.00045,
   ETH: 0.012,
-  LTC: 1.85,
+  SOL: 1.85,
 };
 
 export interface Transaction {
@@ -37,17 +37,17 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
     coin: "BTC",
     usdtAmount: 100,
     coinAmount: 0.00148,
-    txHash: "0xabc123def456789abc123def456789abc123def456789abc123def456789abcd",
+    txHash: "abc123def456789abc123def456789abc123def456789abc123def456789abcd",
     status: "confirmed",
     createdAt: "2026-02-18T10:30:00Z",
   },
   {
     id: "2",
     type: "swap",
-    coin: "LTC",
+    coin: "SOL",
     usdtAmount: 50,
-    coinAmount: 0.741,
-    txHash: "0xdef456789abc123def456789abc123def456789abc123def456789abc123defa",
+    coinAmount: 0.387,
+    txHash: "def456789abc123def456789abc123def456789abc123def456789abc123defa",
     status: "pending",
     createdAt: "2026-02-18T09:15:00Z",
   },
@@ -57,11 +57,11 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
     coin: "USDT",
     usdtAmount: 200,
     coinAmount: 200,
-    txHash: "0x789abc123def456789abc123def456789abc123def456789abc123def456789b",
+    txHash: "789abc123def456789abc123def456789abc123def456789abc123def456789b",
     status: "failed",
     createdAt: "2026-02-17T18:45:00Z",
   },
 ];
 
-export const MOCK_WALLET = "0x7a3F...c9E2";
-export const MOCK_DEPOSIT_ADDRESS = "0x1234567890abcdef1234567890abcdef12345678";
+export const MOCK_WALLET = "guest";
+export const MOCK_DEPOSIT_ADDRESS = "ABC123DEF456GHI789JKL012MNO345PQR678STU901";

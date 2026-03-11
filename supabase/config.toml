@@ -1,6 +1,6 @@
 project_id = "nufxiljqwvwqsszbkemu"
 
-[functions.siwe-auth]
+[functions.username-auth]
 verify_jwt = false
 
 [functions.prices]

@@ -47,7 +47,7 @@ const SwapPage = () => {
 
   const handleVerify = async () => {
     if (!session) {
-      toast.error("Please connect your wallet first");
+      toast.error("Please login first");
       return;
     }
     if (!txHash.trim()) {
@@ -107,7 +107,7 @@ const SwapPage = () => {
         <h1 className="text-2xl font-bold">Swap</h1>
         <GlassCard className="text-center py-12">
           <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Connect your wallet to start swapping.</p>
+          <p className="text-muted-foreground">Login to start swapping.</p>
         </GlassCard>
       </motion.div>
     );
@@ -181,7 +181,7 @@ const SwapPage = () => {
       {/* Deposit Address */}
       <GlassCard delay={0.15}>
         <p className="text-sm text-muted-foreground mb-3">
-          Send USDT (BEP20) to this address
+          Send USDT to this Solana address
         </p>
         {depositAddress ? (
           <>

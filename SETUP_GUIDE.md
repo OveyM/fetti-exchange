@@ -1,7 +1,7 @@
 # FettiSwap - Complete Setup Guide
 
 ## Overview
-FettiSwap is a crypto swap platform that lets users buy BTC, ETH, and LTC with USDT (BEP20). LTC is offered at a $17 discount. Authentication is wallet-based (MetaMask / SIWE).
+FettiSwap is a crypto swap platform that lets users buy BTC, ETH, and SOL with USDT. SOL is offered at a $16 discount. Authentication is username-based (no wallet connection required).
 
 ---
 
@@ -14,12 +14,12 @@ Run this in your Supabase SQL Editor if setting up a fresh database:
 -- FETTISWAP DATABASE SCHEMA
 -- ===========================
 
--- Users table
+-- Users table (wallet_address column stores the username)
 CREATE TABLE public.users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   wallet_address TEXT NOT NULL UNIQUE,
   assigned_bep20_address TEXT UNIQUE,
-  balances JSONB NOT NULL DEFAULT '{"USDT": 0, "BTC": 0, "ETH": 0, "LTC": 0}'::jsonb,
+  balances JSONB NOT NULL DEFAULT '{"USDT": 0, "BTC": 0, "ETH": 0, "SOL": 0}'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
@@ -33,7 +33,7 @@ CREATE POLICY "Users can update own data" ON public.users
   FOR UPDATE TO authenticated
   USING (id = auth.uid());
 
--- Deposit addresses table
+-- Deposit addresses table (Solana wallet addresses)
 CREATE TABLE public.deposit_addresses (
   address TEXT PRIMARY KEY,
   assigned BOOLEAN NOT NULL DEFAULT false,
@@ -90,10 +90,6 @@ Set these secrets in your Supabase project (Dashboard → Settings → Edge Func
 | Secret Name | Description | Example / Default |
 |---|---|---|
 | `ADMIN_PASSWORD` | Password for the admin panel at `/admin` | `password` |
-| `BSC_RPC_URL` | BSC mainnet RPC endpoint | `https://bsc-dataseed.binance.org/` (default if not set) |
-| `USDT_BEP20_CONTRACT` | USDT contract address on BSC | `0x55d398326f99059fF775485246999027B3197955` (default if not set) |
-
-**Note:** `BSC_RPC_URL` and `USDT_BEP20_CONTRACT` have hardcoded defaults. You only need to set them if you want to override them.
 
 The following secrets are auto-configured by Supabase:
 - `SUPABASE_URL`
@@ -106,27 +102,26 @@ The following secrets are auto-configured by Supabase:
 
 There are 4 edge functions:
 
-### 1. `siwe-auth` — Wallet Authentication
-- Verifies MetaMask signature (SIWE)
-- Creates Supabase auth user mapped to wallet address
-- Auto-assigns a deposit address from the pool on first login
+### 1. `username-auth` — Username Authentication
+- Users create accounts with a username (3-20 chars, lowercase letters/numbers/underscores) and password (6+ chars)
+- Creates Supabase auth user mapped to the username
+- Auto-assigns a Solana deposit address from the pool on signup
 - **No JWT required** (handles its own auth)
 
 ### 2. `verify-tx` — Transaction Verification
 - Requires authenticated user (JWT)
 - Accepts `tx_hash`, `coin`, `usdt_amount`, `coin_amount`
-- Fetches BSC transaction receipt via RPC
-- Validates USDT transfer to user's assigned deposit address
-- Credits user balance on success
+- Records the transaction as pending for admin review
+- Admin confirms via the admin panel
 
 ### 3. `prices` — Live Price Feed
-- Fetches BTC, ETH, LTC, USDT prices from CoinGecko
-- Applies $17 LTC discount for Fetti pricing
+- Fetches BTC, ETH, SOL, USDT prices from CoinGecko
+- Applies $16 SOL discount for Fetti pricing
 - Falls back to static prices if CoinGecko is down
 - Refreshes every 30s on the frontend
 
 ### 4. `admin` — Admin Panel API
-- Password-protected (uses `ADMIN_PASSWORD` secret)
+- Password-protected (uses `ADMIN_PASSWORD` secret, default: `password`)
 - Actions: `list-users`, `list-transactions`, `update-balance`, `update-tx-status`, `add-addresses`, `list-addresses`
 
 ---
@@ -136,28 +131,38 @@ There are 4 edge functions:
 1. Go to `/admin` in the app
 2. Enter your admin password (default: `password`)
 3. Click the **Addresses** tab
-4. Paste your BEP20 wallet addresses (one per line)
+4. Paste your **Solana wallet addresses** (one per line)
 5. Click "Add Addresses"
 
-When a new user connects their wallet, they're automatically assigned the next available address.
+When a new user signs up, they're automatically assigned the next available Solana address.
 
 ---
 
 ## How It Works
 
 ### User Flow:
-1. User clicks **Connect Wallet** → MetaMask popup
-2. User signs a message (SIWE) → Backend verifies and creates session
-3. User goes to **Swap** page → Sees their assigned deposit address + QR code
-4. User sends USDT (BEP20) to their deposit address
-5. User pastes the BSC tx hash → Clicks **Verify & Swap**
-6. Backend verifies the tx on-chain → Credits coin balance
-7. User sees updated balance on Home and transaction in History
+1. User clicks **Login** → Enters username & password (or signs up)
+2. User goes to **Swap** page → Sees their assigned Solana deposit address + QR code
+3. User sends USDT to their deposit address on Solana
+4. User pastes the tx hash → Clicks **Verify & Swap**
+5. Transaction is recorded as pending → Admin confirms it
+6. User sees updated balance on Home and transaction in History
 
 ### Admin Flow:
 1. Navigate to `/admin`
 2. Login with admin password
 3. Manage users, transactions, and deposit addresses
+4. Confirm pending transactions to credit user balances
+
+---
+
+## Column Mapping Note
+
+For legacy reasons, the database uses these column names:
+- `users.wallet_address` → stores the **username**
+- `deposit_addresses.assigned_to_wallet` → stores the **username** it's assigned to
+- `transactions.wallet_address` → stores the **username**
+- `users.assigned_bep20_address` → stores the **Solana deposit address**
 
 ---
 
@@ -171,7 +176,7 @@ npm install
 npm run dev
 
 # Deploy edge functions (if using Supabase CLI)
-supabase functions deploy siwe-auth
+supabase functions deploy username-auth
 supabase functions deploy verify-tx
 supabase functions deploy prices
 supabase functions deploy admin
@@ -182,6 +187,6 @@ supabase functions deploy admin
 ## Tech Stack
 - **Frontend:** React + Vite + TypeScript + Tailwind CSS + Framer Motion
 - **Backend:** Supabase (Auth, Database, Edge Functions)
-- **Auth:** SIWE (Sign-In With Ethereum) via MetaMask
-- **On-chain:** BSC (BEP20 USDT) verification via JSON-RPC
+- **Auth:** Username/Password via Edge Function
+- **Deposit:** Solana wallet addresses (USDT)
 - **Prices:** CoinGecko API (free tier)

@@ -5,9 +5,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Fetti special pricing: LTC gets a $17 discount
+// Fetti special pricing: SOL gets a $16 discount
 const FETTI_DISCOUNTS: Record<string, number> = {
-  litecoin: 17,
+  solana: 16,
 };
 
 serve(async (req) => {
@@ -17,7 +17,7 @@ serve(async (req) => {
 
   try {
     const cgUrl =
-      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,litecoin,tether&vs_currencies=usd&include_24hr_change=true";
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,tether&vs_currencies=usd&include_24hr_change=true";
 
     const res = await fetch(cgUrl);
     const data = await res.json();
@@ -36,10 +36,10 @@ serve(async (req) => {
         change24h: parseFloat((data.ethereum?.usd_24h_change || 0).toFixed(2)),
       },
       {
-        coin: "LTC",
-        marketPrice: data.litecoin?.usd || 0,
-        fettiPrice: Math.max(0, (data.litecoin?.usd || 0) - (FETTI_DISCOUNTS.litecoin || 0)),
-        change24h: parseFloat((data.litecoin?.usd_24h_change || 0).toFixed(2)),
+        coin: "SOL",
+        marketPrice: data.solana?.usd || 0,
+        fettiPrice: Math.max(0, (data.solana?.usd || 0) - (FETTI_DISCOUNTS.solana || 0)),
+        change24h: parseFloat((data.solana?.usd_24h_change || 0).toFixed(2)),
       },
       {
         coin: "USDT",
@@ -54,12 +54,11 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error("Prices error:", err);
-    // Return fallback prices
     return new Response(
       JSON.stringify([
         { coin: "BTC", marketPrice: 67432, fettiPrice: 67432, change24h: 0 },
         { coin: "ETH", marketPrice: 3521, fettiPrice: 3521, change24h: 0 },
-        { coin: "LTC", marketPrice: 84, fettiPrice: 67, change24h: 0 },
+        { coin: "SOL", marketPrice: 145, fettiPrice: 129, change24h: 0 },
         { coin: "USDT", marketPrice: 1, fettiPrice: 1, change24h: 0 },
       ]),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
