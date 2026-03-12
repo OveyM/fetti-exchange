@@ -8,7 +8,9 @@ import BottomNav from "@/components/BottomNav";
 import ConnectWalletButton from "@/components/ConnectWalletButton";
 import HomePage from "@/pages/HomePage";
 import SwapPage from "@/pages/SwapPage";
+import WithdrawPage from "@/pages/WithdrawPage";
 import HistoryPage from "@/pages/HistoryPage";
+import FeedPage from "@/pages/FeedPage";
 import AdminPage from "@/pages/AdminPage";
 import NotFound from "./pages/NotFound";
 
@@ -34,7 +36,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<AppLayout><HomePage /></AppLayout>} />
             <Route path="/swap" element={<AppLayout><SwapPage /></AppLayout>} />
+            <Route path="/withdraw" element={<AppLayout><WithdrawPage /></AppLayout>} />
             <Route path="/history" element={<AppLayout><HistoryPage /></AppLayout>} />
+            <Route path="/feed" element={<AppLayout><FeedPage /></AppLayout>} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
