@@ -74,6 +74,7 @@ export type Database = {
           balances: Json
           created_at: string
           id: string
+          recovery_code: string | null
           wallet_address: string
         }
         Insert: {
@@ -81,6 +82,7 @@ export type Database = {
           balances?: Json
           created_at?: string
           id: string
+          recovery_code?: string | null
           wallet_address: string
         }
         Update: {
@@ -88,6 +90,7 @@ export type Database = {
           balances?: Json
           created_at?: string
           id?: string
+          recovery_code?: string | null
           wallet_address?: string
         }
         Relationships: []
