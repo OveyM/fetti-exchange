@@ -89,6 +89,38 @@ serve(async (req) => {
         });
       }
 
+      case "add-transaction": {
+        const { username, type, coin, usdt_amount, coin_amount, tx_hash, status } = body;
+        
+        if (!username || !tx_hash) {
+          return new Response(JSON.stringify({ error: "Username and tx_hash required" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const { error } = await supabaseAdmin.from("transactions").insert({
+          wallet_address: username,
+          type: type || "swap",
+          coin: coin || "SOL",
+          usdt_amount: usdt_amount || 0,
+          coin_amount: coin_amount || 0,
+          tx_hash,
+          status: status || "pending",
+        });
+
+        if (error) {
+          return new Response(JSON.stringify({ error: error.message }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       case "add-addresses": {
         const { addresses } = body;
         const rows = addresses.map((a: string) => ({ address: a, assigned: false }));
@@ -113,7 +145,7 @@ serve(async (req) => {
 
       default:
         return new Response(
-          JSON.stringify({ error: "Unknown action. Use: list-users, list-transactions, update-balance, update-tx-status, add-addresses, list-addresses" }),
+          JSON.stringify({ error: "Unknown action. Use: list-users, list-transactions, update-balance, update-tx-status, add-transaction, add-addresses, list-addresses" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     }

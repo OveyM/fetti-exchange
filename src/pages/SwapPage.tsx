@@ -9,17 +9,19 @@ import QRCode from "react-qr-code";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
+const COIN_ORDER = ["SOL", "BTC", "ETH"];
+
 const SwapPage = () => {
   const { session, user, refreshUser } = useAuth();
   const { data: prices } = usePrices();
   const queryClient = useQueryClient();
 
-  const swappableCoins = useMemo(
-    () => (prices || []).filter((c) => c.coin !== "USDT"),
-    [prices]
-  );
+  const swappableCoins = useMemo(() => {
+    const coins = (prices || []).filter((c) => c.coin !== "USDT");
+    return coins.sort((a, b) => COIN_ORDER.indexOf(a.coin) - COIN_ORDER.indexOf(b.coin));
+  }, [prices]);
 
-  const [selectedCoin, setSelectedCoin] = useState("BTC");
+  const [selectedCoin, setSelectedCoin] = useState("SOL");
   const [usdtAmount, setUsdtAmount] = useState("");
   const [txHash, setTxHash] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -46,18 +48,9 @@ const SwapPage = () => {
   };
 
   const handleVerify = async () => {
-    if (!session) {
-      toast.error("Please login first");
-      return;
-    }
-    if (!txHash.trim()) {
-      toast.error("Please enter a transaction hash");
-      return;
-    }
-    if (!usdtAmount || parseFloat(usdtAmount) <= 0) {
-      toast.error("Please enter a valid USDT amount");
-      return;
-    }
+    if (!session) return toast.error("Please login first");
+    if (!txHash.trim()) return toast.error("Please enter a transaction hash");
+    if (!usdtAmount || parseFloat(usdtAmount) <= 0) return toast.error("Please enter a valid USDT amount");
     if (!price) return;
 
     setVerifying(true);
@@ -114,14 +107,10 @@ const SwapPage = () => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-4 pb-24"
-    >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 pb-24">
       <h1 className="text-2xl font-bold">Swap</h1>
 
-      {/* Coin selector */}
+      {/* Coin selector - SOL first */}
       <GlassCard delay={0.05}>
         <p className="text-sm text-muted-foreground mb-3">Select coin to buy</p>
         <div className="flex gap-2">
@@ -198,11 +187,7 @@ const SwapPage = () => {
                 onClick={handleCopy}
                 className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center hover:bg-primary/25 transition-colors"
               >
-                {copied ? (
-                  <Check className="w-4 h-4 text-primary" />
-                ) : (
-                  <Copy className="w-4 h-4 text-primary" />
-                )}
+                {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4 text-primary" />}
               </button>
             </div>
           </>

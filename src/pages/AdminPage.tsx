@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Loader2, Users, ArrowLeftRight, MapPin, Shield } from "lucide-react";
+import { Loader2, Users, ArrowLeftRight, MapPin, Shield, Plus } from "lucide-react";
 
 const AdminPage = () => {
   const [password, setPassword] = useState("");
@@ -22,6 +22,15 @@ const AdminPage = () => {
   const [editTxId, setEditTxId] = useState("");
   const [editTxStatus, setEditTxStatus] = useState("confirmed");
 
+  // Add transaction form
+  const [newTxUsername, setNewTxUsername] = useState("");
+  const [newTxType, setNewTxType] = useState("swap");
+  const [newTxCoin, setNewTxCoin] = useState("SOL");
+  const [newTxUsdtAmount, setNewTxUsdtAmount] = useState("");
+  const [newTxCoinAmount, setNewTxCoinAmount] = useState("");
+  const [newTxHash, setNewTxHash] = useState("");
+  const [newTxStatus, setNewTxStatus] = useState("confirmed");
+
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
   const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
@@ -39,10 +48,7 @@ const AdminPage = () => {
     setLoading(true);
     const result = await adminFetch("list-users");
     setLoading(false);
-    if (result.error) {
-      toast.error("Invalid password");
-      return;
-    }
+    if (result.error) return toast.error("Invalid password");
     setAuthenticated(true);
     setData(result);
     toast.success("Admin access granted");
@@ -84,6 +90,29 @@ const AdminPage = () => {
     });
     if (result.success) {
       toast.success("Transaction updated");
+      loadTab("transactions");
+    } else {
+      toast.error(result.error || "Failed");
+    }
+  };
+
+  const handleAddTransaction = async () => {
+    if (!newTxUsername || !newTxHash) return toast.error("Username and tx hash required");
+    const result = await adminFetch("add-transaction", {
+      username: newTxUsername,
+      type: newTxType,
+      coin: newTxCoin,
+      usdt_amount: parseFloat(newTxUsdtAmount) || 0,
+      coin_amount: parseFloat(newTxCoinAmount) || 0,
+      tx_hash: newTxHash,
+      status: newTxStatus,
+    });
+    if (result.success) {
+      toast.success("Transaction added");
+      setNewTxUsername("");
+      setNewTxHash("");
+      setNewTxUsdtAmount("");
+      setNewTxCoinAmount("");
       loadTab("transactions");
     } else {
       toast.error(result.error || "Failed");
@@ -142,7 +171,7 @@ const AdminPage = () => {
         <h1 className="text-2xl font-bold">Admin Panel</h1>
 
         {/* Tabs */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {[
             { key: "users" as const, icon: Users, label: "Users" },
             { key: "transactions" as const, icon: ArrowLeftRight, label: "Transactions" },
@@ -171,7 +200,6 @@ const AdminPage = () => {
 
         {!loading && activeTab === "users" && (
           <div className="space-y-4">
-            {/* Update balance form */}
             <div className="glass-card p-4 space-y-3">
               <h3 className="font-semibold text-sm">Update User Balance</h3>
               <input
@@ -203,7 +231,6 @@ const AdminPage = () => {
               </div>
             </div>
 
-            {/* Users list */}
             <div className="space-y-2">
               {data.map((u: any) => (
                 <div key={u.id} className="glass-card p-4 text-sm space-y-1">
@@ -219,6 +246,41 @@ const AdminPage = () => {
 
         {!loading && activeTab === "transactions" && (
           <div className="space-y-4">
+            {/* Add transaction */}
+            <div className="glass-card p-4 space-y-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <Plus className="w-4 h-4" /> Add Transaction for User
+              </h3>
+              <input
+                placeholder="Username"
+                value={newTxUsername}
+                onChange={(e) => setNewTxUsername(e.target.value)}
+                className="input-glass w-full text-sm"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <select value={newTxType} onChange={(e) => setNewTxType(e.target.value)} className="input-glass text-sm">
+                  {["swap", "deposit", "withdrawal"].map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <select value={newTxCoin} onChange={(e) => setNewTxCoin(e.target.value)} className="input-glass text-sm">
+                  {["SOL", "BTC", "ETH", "USDT"].map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input type="number" placeholder="USDT Amount" value={newTxUsdtAmount} onChange={(e) => setNewTxUsdtAmount(e.target.value)} className="input-glass text-sm" />
+                <input type="number" placeholder="Coin Amount" value={newTxCoinAmount} onChange={(e) => setNewTxCoinAmount(e.target.value)} className="input-glass text-sm" />
+              </div>
+              <input placeholder="Tx Hash" value={newTxHash} onChange={(e) => setNewTxHash(e.target.value)} className="input-glass w-full text-sm font-mono" />
+              <div className="flex gap-2">
+                <select value={newTxStatus} onChange={(e) => setNewTxStatus(e.target.value)} className="input-glass text-sm">
+                  {["pending", "confirmed", "failed"].map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <button onClick={handleAddTransaction} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium flex-1">
+                  Add Transaction
+                </button>
+              </div>
+            </div>
+
+            {/* Update tx status */}
             <div className="glass-card p-4 space-y-3">
               <h3 className="font-semibold text-sm">Update Transaction Status</h3>
               <div className="flex gap-2">
@@ -228,14 +290,8 @@ const AdminPage = () => {
                   onChange={(e) => setEditTxId(e.target.value)}
                   className="input-glass flex-1 text-sm"
                 />
-                <select
-                  value={editTxStatus}
-                  onChange={(e) => setEditTxStatus(e.target.value)}
-                  className="input-glass text-sm"
-                >
-                  {["pending", "confirmed", "failed"].map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
+                <select value={editTxStatus} onChange={(e) => setEditTxStatus(e.target.value)} className="input-glass text-sm">
+                  {["pending", "confirmed", "failed"].map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
                 <button onClick={handleUpdateTxStatus} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
                   Update
@@ -253,6 +309,7 @@ const AdminPage = () => {
                     }`}>{tx.status}</span>
                   </div>
                   <p className="font-mono text-xs text-muted-foreground truncate">{tx.tx_hash}</p>
+                  <p><span className="text-muted-foreground">User:</span> {tx.wallet_address}</p>
                   <p><span className="text-muted-foreground">Amount:</span> {tx.coin_amount} {tx.coin} (${tx.usdt_amount})</p>
                   <p className="text-xs text-muted-foreground">ID: {tx.id}</p>
                 </div>
@@ -266,7 +323,7 @@ const AdminPage = () => {
             <div className="glass-card p-4 space-y-3">
               <h3 className="font-semibold text-sm">Add Solana Deposit Addresses (one per line)</h3>
               <textarea
-                placeholder="ABC123...&#10;DEF456...&#10;GHI789..."
+                placeholder={"ABC123...\nDEF456...\nGHI789..."}
                 value={newAddresses}
                 onChange={(e) => setNewAddresses(e.target.value)}
                 className="input-glass w-full h-32 font-mono text-sm resize-none"

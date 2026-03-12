@@ -20,6 +20,7 @@ const HomePage = () => {
 
   const getPrice = (coin: string) => priceList.find((p) => p.coin === coin);
 
+  // Calculate real USD worth using market prices
   const totalUsd =
     (balances.USDT || 0) +
     (balances.BTC || 0) * (getPrice("BTC")?.marketPrice || 0) +
@@ -29,6 +30,13 @@ const HomePage = () => {
   const usernameDisplay = user ? user.username : "Not Connected";
 
   const solPrice = getPrice("SOL");
+
+  // Helper to get USD value for a coin balance
+  const getCoinUsdValue = (coin: string, amount: number) => {
+    if (coin === "USDT") return amount;
+    const p = getPrice(coin);
+    return p ? amount * p.marketPrice : 0;
+  };
 
   return (
     <motion.div
@@ -50,7 +58,7 @@ const HomePage = () => {
 
       {/* Total Balance */}
       <GlassCard className="text-center" delay={0.05}>
-        <p className="text-sm text-muted-foreground mb-1">Total Balance</p>
+        <p className="text-sm text-muted-foreground mb-1">Wallet Balance (Real Worth)</p>
         <h2 className="text-4xl font-bold neon-text">
           ${totalUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
         </h2>
@@ -58,15 +66,21 @@ const HomePage = () => {
 
       {/* Balances Grid */}
       <div className="grid grid-cols-2 gap-3">
-        {Object.entries(balances).map(([coin, amount], i) => (
-          <GlassCard key={coin} delay={0.1 + i * 0.05} className="flex items-center gap-3">
-            <CoinIcon coin={coin} size={36} />
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground">{coin}</p>
-              <p className="text-sm font-semibold truncate">{amount}</p>
-            </div>
-          </GlassCard>
-        ))}
+        {Object.entries(balances).map(([coin, amount], i) => {
+          const usdVal = getCoinUsdValue(coin, amount as number);
+          return (
+            <GlassCard key={coin} delay={0.1 + i * 0.05} className="flex items-center gap-3">
+              <CoinIcon coin={coin} size={36} />
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">{coin}</p>
+                <p className="text-sm font-semibold truncate">{amount as number}</p>
+                <p className="text-xs text-muted-foreground">
+                  ≈ ${usdVal.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                </p>
+              </div>
+            </GlassCard>
+          );
+        })}
       </div>
 
       {/* SOL Special Card */}
