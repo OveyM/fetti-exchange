@@ -14,7 +14,8 @@ interface AuthContextType {
   user: UserData | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  signup: (username: string, password: string) => Promise<void>;
+  signup: (username: string, password: string) => Promise<string | undefined>;
+  loginWithRecovery: (username: string, recoveryCode: string) => Promise<void>;
   disconnect: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -41,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (data) {
       setUser({
         id: data.id,
-        username: data.wallet_address, // wallet_address column stores username
+        username: data.wallet_address,
         assigned_bep20_address: data.assigned_bep20_address,
         balances: data.balances as Record<string, number>,
       });
@@ -73,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signup = async (username: string, password: string) => {
+  const callAuthFn = async (body: Record<string, string>) => {
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
     const res = await fetch(
       `https://${projectId}.supabase.co/functions/v1/username-auth`,
@@ -83,11 +84,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           "Content-Type": "application/json",
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ action: "signup", username, password }),
+        body: JSON.stringify(body),
       }
     );
+    return res.json();
+  };
 
-    const data = await res.json();
+  const signup = async (username: string, password: string): Promise<string | undefined> => {
+    const data = await callAuthFn({ action: "signup", username, password });
+    if (data.error) throw new Error(data.error);
+
+    if (data.session) {
+      await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+    }
+
+    return data.recovery_code;
+  };
+
+  const login = async (username: string, password: string) => {
+    const data = await callAuthFn({ action: "login", username, password });
     if (data.error) throw new Error(data.error);
 
     if (data.session) {
@@ -98,21 +116,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const login = async (username: string, password: string) => {
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-    const res = await fetch(
-      `https://${projectId}.supabase.co/functions/v1/username-auth`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({ action: "login", username, password }),
-      }
-    );
-
-    const data = await res.json();
+  const loginWithRecovery = async (username: string, recoveryCode: string) => {
+    const data = await callAuthFn({ action: "recover", username, recovery_code: recoveryCode });
     if (data.error) throw new Error(data.error);
 
     if (data.session) {
@@ -130,7 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, login, signup, disconnect, refreshUser }}>
+    <AuthContext.Provider value={{ session, user, loading, login, signup, loginWithRecovery, disconnect, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
