@@ -170,17 +170,17 @@ const AdminPage = () => {
       <div className="max-w-4xl mx-auto p-4 space-y-4">
         <h1 className="text-2xl font-bold">Admin Panel</h1>
 
-        {/* Tabs */}
-        <div className="flex gap-2 flex-wrap">
+        {/* Tabs - Scrollable on mobile */}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {[
             { key: "users" as const, icon: Users, label: "Users" },
-            { key: "transactions" as const, icon: ArrowLeftRight, label: "Transactions" },
+            { key: "transactions" as const, icon: ArrowLeftRight, label: "Txns" },
             { key: "addresses" as const, icon: MapPin, label: "Addresses" },
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => handleTabChange(tab.key)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeTab === tab.key
                   ? "bg-primary/15 border border-primary/30 text-primary"
                   : "bg-card/60 border border-glass-border text-muted-foreground hover:text-foreground"
