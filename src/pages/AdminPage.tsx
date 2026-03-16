@@ -320,7 +320,7 @@ const AdminPage = () => {
 
         {!loading && activeTab === "addresses" && (
           <div className="space-y-4">
-            <div className="glass-card p-4 space-y-3">
+            <div className="glass-card p-3 sm:p-4 space-y-3">
               <h3 className="font-semibold text-sm">Add Solana Deposit Addresses (one per line)</h3>
               <textarea
                 placeholder={"ABC123...\nDEF456...\nGHI789..."}
@@ -328,16 +328,16 @@ const AdminPage = () => {
                 onChange={(e) => setNewAddresses(e.target.value)}
                 className="input-glass w-full h-32 font-mono text-sm resize-none"
               />
-              <button onClick={handleAddAddresses} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
+              <button onClick={handleAddAddresses} className="w-full sm:w-auto px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
                 Add Addresses
               </button>
             </div>
 
             <div className="space-y-2">
               {data.map((addr: any) => (
-                <div key={addr.address} className="glass-card p-3 text-sm flex justify-between items-center">
-                  <span className="font-mono text-xs truncate flex-1">{addr.address}</span>
-                  <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                <div key={addr.address} className="glass-card p-3 text-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <span className="font-mono text-[10px] sm:text-xs break-all flex-1">{addr.address}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${
                     addr.assigned ? "status-confirmed" : "status-pending"
                   }`}>
                     {addr.assigned ? `Assigned (${addr.assigned_to_wallet})` : "Available"}
