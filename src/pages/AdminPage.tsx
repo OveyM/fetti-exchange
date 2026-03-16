@@ -70,7 +70,7 @@ const AdminPage = () => {
   const handleUpdateBalance = async () => {
     if (!editUserId || !editAmount) return;
     const result = await adminFetch("update-balance", {
-      user_id: editUserId,
+      username: editUserId,
       coin: editCoin,
       amount: parseFloat(editAmount),
     });
