@@ -247,9 +247,9 @@ const AdminPage = () => {
         {!loading && activeTab === "transactions" && (
           <div className="space-y-4">
             {/* Add transaction */}
-            <div className="glass-card p-4 space-y-3">
+            <div className="glass-card p-3 sm:p-4 space-y-3">
               <h3 className="font-semibold text-sm flex items-center gap-2">
-                <Plus className="w-4 h-4" /> Add Transaction for User
+                <Plus className="w-4 h-4" /> Add Transaction
               </h3>
               <input
                 placeholder="Username"
@@ -257,7 +257,7 @@ const AdminPage = () => {
                 onChange={(e) => setNewTxUsername(e.target.value)}
                 className="input-glass w-full text-sm"
               />
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <select value={newTxType} onChange={(e) => setNewTxType(e.target.value)} className="input-glass text-sm">
                   {["swap", "deposit", "withdrawal"].map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
@@ -265,13 +265,13 @@ const AdminPage = () => {
                   {["SOL", "BTC", "ETH", "USDT"].map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <input type="number" placeholder="USDT Amount" value={newTxUsdtAmount} onChange={(e) => setNewTxUsdtAmount(e.target.value)} className="input-glass text-sm" />
                 <input type="number" placeholder="Coin Amount" value={newTxCoinAmount} onChange={(e) => setNewTxCoinAmount(e.target.value)} className="input-glass text-sm" />
               </div>
               <input placeholder="Tx Hash" value={newTxHash} onChange={(e) => setNewTxHash(e.target.value)} className="input-glass w-full text-sm font-mono" />
-              <div className="flex gap-2">
-                <select value={newTxStatus} onChange={(e) => setNewTxStatus(e.target.value)} className="input-glass text-sm">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <select value={newTxStatus} onChange={(e) => setNewTxStatus(e.target.value)} className="input-glass text-sm w-full sm:w-auto">
                   {["pending", "confirmed", "failed"].map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
                 <button onClick={handleAddTransaction} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium flex-1">
@@ -281,19 +281,19 @@ const AdminPage = () => {
             </div>
 
             {/* Update tx status */}
-            <div className="glass-card p-4 space-y-3">
+            <div className="glass-card p-3 sm:p-4 space-y-3">
               <h3 className="font-semibold text-sm">Update Transaction Status</h3>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   placeholder="Transaction ID (UUID)"
                   value={editTxId}
                   onChange={(e) => setEditTxId(e.target.value)}
                   className="input-glass flex-1 text-sm"
                 />
-                <select value={editTxStatus} onChange={(e) => setEditTxStatus(e.target.value)} className="input-glass text-sm">
+                <select value={editTxStatus} onChange={(e) => setEditTxStatus(e.target.value)} className="input-glass text-sm w-full sm:w-auto">
                   {["pending", "confirmed", "failed"].map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
-                <button onClick={handleUpdateTxStatus} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
+                <button onClick={handleUpdateTxStatus} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium w-full sm:w-auto">
                   Update
                 </button>
               </div>
@@ -301,17 +301,17 @@ const AdminPage = () => {
 
             <div className="space-y-2">
               {data.map((tx: any) => (
-                <div key={tx.id} className="glass-card p-4 text-sm space-y-1">
-                  <div className="flex justify-between">
+                <div key={tx.id} className="glass-card p-3 sm:p-4 text-sm space-y-1">
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                     <span className="font-medium capitalize">{tx.type} · {tx.coin}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${
+                    <span className={`px-2 py-0.5 rounded-full text-xs w-fit ${
                       tx.status === "confirmed" ? "status-confirmed" : tx.status === "pending" ? "status-pending" : "status-failed"
                     }`}>{tx.status}</span>
                   </div>
-                  <p className="font-mono text-xs text-muted-foreground truncate">{tx.tx_hash}</p>
-                  <p><span className="text-muted-foreground">User:</span> {tx.wallet_address}</p>
+                  <p className="font-mono text-[10px] sm:text-xs text-muted-foreground break-all">{tx.tx_hash}</p>
+                  <p className="break-all"><span className="text-muted-foreground">User:</span> {tx.wallet_address}</p>
                   <p><span className="text-muted-foreground">Amount:</span> {tx.coin_amount} {tx.coin} (${tx.usdt_amount})</p>
-                  <p className="text-xs text-muted-foreground">ID: {tx.id}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground break-all">ID: {tx.id}</p>
                 </div>
               ))}
             </div>
