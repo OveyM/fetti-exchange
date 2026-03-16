@@ -50,12 +50,15 @@ serve(async (req) => {
       }
 
       case "update-balance": {
-        const { user_id, coin, amount } = body;
-        const { data: userData } = await supabaseAdmin
-          .from("users")
-          .select("balances")
-          .eq("id", user_id)
-          .single();
+        const { user_id, username, coin, amount } = body;
+        
+        let query = supabaseAdmin.from("users").select("id, balances");
+        if (username) {
+          query = query.eq("wallet_address", username);
+        } else if (user_id) {
+          query = query.eq("id", user_id);
+        }
+        const { data: userData } = await query.single();
 
         if (!userData) {
           return new Response(JSON.stringify({ error: "User not found" }), {
@@ -70,7 +73,7 @@ serve(async (req) => {
         await supabaseAdmin
           .from("users")
           .update({ balances })
-          .eq("id", user_id);
+          .eq("id", userData.id);
 
         return new Response(JSON.stringify({ success: true, balances }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -149,8 +152,9 @@ serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     }
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

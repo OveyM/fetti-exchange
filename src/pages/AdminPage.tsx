@@ -70,7 +70,7 @@ const AdminPage = () => {
   const handleUpdateBalance = async () => {
     if (!editUserId || !editAmount) return;
     const result = await adminFetch("update-balance", {
-      user_id: editUserId,
+      username: editUserId,
       coin: editCoin,
       amount: parseFloat(editAmount),
     });
@@ -203,7 +203,7 @@ const AdminPage = () => {
             <div className="glass-card p-4 space-y-3">
               <h3 className="font-semibold text-sm">Update User Balance</h3>
               <input
-                placeholder="User ID (UUID)"
+                placeholder="Username"
                 value={editUserId}
                 onChange={(e) => setEditUserId(e.target.value)}
                 className="input-glass w-full text-sm"
