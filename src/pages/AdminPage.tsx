@@ -200,7 +200,7 @@ const AdminPage = () => {
 
         {!loading && activeTab === "users" && (
           <div className="space-y-4">
-            <div className="glass-card p-4 space-y-3">
+            <div className="glass-card p-3 sm:p-4 space-y-3">
               <h3 className="font-semibold text-sm">Update User Balance</h3>
               <input
                 placeholder="Username"
@@ -208,11 +208,11 @@ const AdminPage = () => {
                 onChange={(e) => setEditUserId(e.target.value)}
                 className="input-glass w-full text-sm"
               />
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <select
                   value={editCoin}
                   onChange={(e) => setEditCoin(e.target.value)}
-                  className="input-glass text-sm"
+                  className="input-glass text-sm w-full sm:w-auto"
                 >
                   {["USDT", "BTC", "ETH", "SOL"].map((c) => (
                     <option key={c} value={c}>{c}</option>
@@ -225,7 +225,7 @@ const AdminPage = () => {
                   onChange={(e) => setEditAmount(e.target.value)}
                   className="input-glass flex-1 text-sm"
                 />
-                <button onClick={handleUpdateBalance} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
+                <button onClick={handleUpdateBalance} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium w-full sm:w-auto">
                   Update
                 </button>
               </div>
@@ -233,11 +233,11 @@ const AdminPage = () => {
 
             <div className="space-y-2">
               {data.map((u: any) => (
-                <div key={u.id} className="glass-card p-4 text-sm space-y-1">
-                  <p className="font-mono text-xs text-muted-foreground">{u.id}</p>
-                  <p><span className="text-muted-foreground">Username:</span> {u.wallet_address}</p>
-                  <p><span className="text-muted-foreground">Deposit Addr:</span> {u.assigned_bep20_address || "None"}</p>
-                  <p><span className="text-muted-foreground">Balances:</span> {JSON.stringify(u.balances)}</p>
+                <div key={u.id} className="glass-card p-3 sm:p-4 text-sm space-y-1">
+                  <p className="font-mono text-[10px] sm:text-xs text-muted-foreground break-all">{u.id}</p>
+                  <p className="break-all"><span className="text-muted-foreground">Username:</span> {u.wallet_address}</p>
+                  <p className="break-all"><span className="text-muted-foreground">Deposit Addr:</span> {u.assigned_bep20_address || "None"}</p>
+                  <p className="break-all"><span className="text-muted-foreground">Balances:</span> {JSON.stringify(u.balances)}</p>
                 </div>
               ))}
             </div>
